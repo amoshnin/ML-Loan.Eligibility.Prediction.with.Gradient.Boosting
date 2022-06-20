@@ -1,1 +1,1 @@
-- URL: https://www.projectpro.io/project-use-case/credit-score
+- URL: https://www.projectpro.io/project/hackerday-project/project-title/isolation%20forest%20model%20example%20python%20sklearn#sub-about-hackerday
