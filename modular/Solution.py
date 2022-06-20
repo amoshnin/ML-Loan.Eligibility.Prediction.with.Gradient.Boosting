@@ -1,3 +1,4 @@
+import operator
 import pandas as pd
 import numpy as np
 import os
@@ -25,11 +26,7 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 import joblib
 
-%matplotlib inline
-
-
-
-
+# %matplotlib inline
 
 def classify(est, x, y,X_test,y_test):
     #Passing the model and train test dataset to fit the model
@@ -48,7 +45,7 @@ def classify(est, x, y,X_test,y_test):
     print(" ")
     print("Evaluation by cross-validation:")
     print(cross_val_score(est, x, y))
-    
+
     return est, y1, y2[:, 1]
 
 
@@ -60,12 +57,12 @@ def feat_importance(estimator):
 
     feature_importance = {k: v for k, v in feature_importance.items()}
     sorted_x = sorted(feature_importance.items(), key=operator.itemgetter(1), reverse = True)
-    
+
     return sorted_x
 
 #Model to  predict the ROC curve for various models and finding the best one
 def run_models(X_train, y_train, X_test, y_test, model_type = 'Non-balanced'):
-    
+
     clfs = {'GradientBoosting': GradientBoostingClassifier(max_depth= 6, n_estimators=100, max_features = 0.3),
             'LogisticRegression' : LogisticRegression(),
             #'GaussianNB': GaussianNB(),
@@ -105,12 +102,12 @@ def run_models(X_train, y_train, X_test, y_test, model_type = 'Non-balanced'):
         plt.plot(fpr, tpr, label = clf_name )
         plt.legend(loc=2, prop={'size':11})
     plt.plot([0,1],[0,1], color = 'black')
-    
+
     return models_report, conf_matrix
 
 
 #############Reading the dataset############################
-data=pd.read_csv("D:\LoansTrainingSetV2\LoansTrainingSetV2.csv",low_memory=False)
+data=pd.read_csv("../data/train_data.csv",low_memory=False)
 
 ###############EDA Starts here####################################
 data.head()
@@ -119,8 +116,8 @@ len(data)
 ##Drop the duplicates with respect to LOAN ID
 data.drop_duplicates(subset="Loan ID",keep='first',inplace=True)
 
-##########PLotting the loan status 
-status=data["Loan Status"].value_counts() 
+##########PLotting the loan status
+status=data["Loan Status"].value_counts()
 
 plt.figure(figsize=(10,5))
 sns.barplot(status.index, status.values, alpha=0.8)
@@ -163,7 +160,7 @@ data["Current Loan Amount_temp"] = np.where(temp > 9999998, 'NaN', temp).tolist(
 temp=data["Current Loan Amount_temp"][data["Current Loan Amount_temp"]!='NaN'].astype(str).astype(int)
 temp.plot.hist(grid=True, bins=20, rwidth=0.9,
                    color='#607c8e')
-                   
+
 temp.describe()
 
 #Replacing the data with 50% percentile or mean
@@ -175,7 +172,7 @@ data=data.drop(['Current Loan Amount_temp'],axis=1)
 
 ############Term ##############
 
-status=data["Term"].value_counts() 
+status=data["Term"].value_counts()
 
 plt.figure(figsize=(10,5))
 sns.barplot(status.index, status.values, alpha=0.8)
@@ -199,18 +196,18 @@ data["Credit Score"].isnull().unique()
 
 data["Credit Score"]=np.where(data["Credit Score"]>800, data["Credit Score"]/10, data["Credit Score"])
 
-#Now lets replace the missing values with median 
+#Now lets replace the missing values with median
 median_score=statistics.median(data["Credit Score"])
 
 data["Credit Score_1"]=data["Credit Score"]
-data["Credit Score_1"].fillna(median_score, inplace = True) 
+data["Credit Score_1"].fillna(median_score, inplace = True)
 
 sns.distplot(data["Credit Score_1"])
-#As we can see this data is skewed so when we replace it with median it is giving us problems. 
+#As we can see this data is skewed so when we replace it with median it is giving us problems.
 #Replacing with 75th percentile and taking log we get a better distribution
 
 
-data["Credit Score"].fillna(741, inplace = True) 
+data["Credit Score"].fillna(741, inplace = True)
 
 sns.distplot(data["Credit Score"])
 sns.distplot(np.log(data["Credit Score"]))
@@ -250,7 +247,7 @@ data.loc[data['Annual Income'] > 239287, 'Annual Income'] = 239287
 
 
 data['Annual Income'].isna().sum()
-#So we have about 21000 null values 
+#So we have about 21000 null values
 
 ##We will impute the mising data with other columns towards the end
 
@@ -268,11 +265,11 @@ data['Purpose']=data['Purpose'].str.replace('Other', 'other', regex=True)
 
 data['Monthly Debt'].describe()
 ##So this is not numeric column. Lets explore
-data['Monthly Debt'] 
+data['Monthly Debt']
 # But this should be a numeric column. So lets convert it to float
 
-pd.to_numeric(data['Monthly Debt'] )
-#As we can see there is a $ symbol present. Lets replace it 
+# pd.to_numeric(data['Monthly Debt'] ) # ERROR: WILL THROW ERROR
+#As we can see there is a $ symbol present. Lets replace it
 data['Monthly Debt']=data['Monthly Debt'].str.replace('$', '', regex=True)
 
 data['Monthly Debt']=pd.to_numeric(data['Monthly Debt'] )
@@ -324,7 +321,7 @@ data['Months since last delinquent'].describe()
 
 #Lets check if there are any NA's
 data['Months since last delinquent'].isna().sum()
-#We have nearly 48506 NA;s. We will try to handle them at last 
+#We have nearly 48506 NA;s. We will try to handle them at last
 
 
 ##############Number of open accounts ##############
@@ -350,7 +347,7 @@ sns.distplot(data['Number of Open Accounts'])
 
 #######################Number of Credit problems##############
 
-data['Number of Credit Problems'].describe() 
+data['Number of Credit Problems'].describe()
 #Max looks a bit higher. Lets see
 
 sns.distplot(data['Number of Credit Problems'])
@@ -402,19 +399,19 @@ data['Maximum Open Credit'].describe()
 
 data['Maximum Open Credit'].value_counts()
 
-sns.distplot(data['Maximum Open Credit'])
+# sns.distplot(data['Maximum Open Credit']) # ERROR: WILL THROW ERROR
 #So there are some str characters present in the data. Lets find them
 
-pd.to_numeric(data['Maximum Open Credit'])
+# pd.to_numeric(data['Maximum Open Credit']) # ERROR: WILL THROW ERROR
 
 #Lets replace #value with Nan
 data['Maximum Open Credit']=data['Maximum Open Credit'].replace('#VALUE!', np.nan, regex=True)
-    
+
 data['Maximum Open Credit']=pd.to_numeric(data['Maximum Open Credit'])
 
 
 data['Maximum Open Credit'].isnull().sum()
-#Now we have only 2 Nan;s in the data. Lets replace them with mean  
+#Now we have only 2 Nan;s in the data. Lets replace them with mean
 data['Maximum Open Credit']=data['Maximum Open Credit'].fillna(35965)
 
 
@@ -499,17 +496,17 @@ pyplot.show()
 feat1 = feat_importance(xgb0)
 
 
-xgb0, y_pred_b, y_pred2_b = classify(XGBClassifier(n_estimators=47, learning_rate=0.015), X_train, y_train,,X_test,y_test)
+xgb0, y_pred_b, y_pred2_b = classify(XGBClassifier(n_estimators=47, learning_rate=0.015), X_train, y_train,X_test,y_test)
 
 #######K nearest Neighbour classifier ################
 
-knc, y_p, y_p2 = classify(KNeighborsClassifier(), X_train, y_train,,X_test,y_test)
+knc, y_p, y_p2 = classify(KNeighborsClassifier(), X_train, y_train,X_test,y_test)
 
 ########Logistic Regression ##############
-logit, y_p, y_p2 = classify(LogisticRegression(), X_train, y_train,,X_test,y_test)
+logit, y_p, y_p2 = classify(LogisticRegression(), X_train, y_train,X_test,y_test)
 
 ########Decision Tree Classifier ##########
-dtc, y_p, y_p2 = classify(DecisionTreeClassifier(), X_train2, y_train2,,X_test,y_test)
+dtc, y_p, y_p2 = classify(DecisionTreeClassifier(), X_train, y_train,X_test,y_test)
 
 
 
@@ -526,13 +523,13 @@ models_report
 
 
 index_split = int(len(X_scaled)/2)
-X_train, y_train = SMOTE().fit_sample(X_scaled[0:index_split, :], y[0:index_split])
+X_train, y_train = SMOTE().fit_resample(X_scaled[0:index_split, :], y[0:index_split])
 X_test, y_test = X_scaled[index_split:], y[index_split:]
 
 models_report_bal, conf_matrix_bal = run_models(X_train, y_train, X_test, y_test, model_type = 'Balanced')
 
 
-################Now we  know that GBM model performed the best so 
+################Now we  know that GBM model performed the best so
 # save model
 gbm=GradientBoostingClassifier(max_depth= 6, n_estimators=100, max_features = 0.3)
 gbm.fit(X_scaled, y)
