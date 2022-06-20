@@ -1,1 +1,1 @@
-- URL: https://www.projectpro.io/project/hackerday-project/project-title/isolation%20forest%20model%20example%20python%20sklearn#sub-about-hackerday
+- URL: https://www.projectpro.io/project/hackerday-project/project-title/loan%20prediction%20analytics#sub-about-hackerday
